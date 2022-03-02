@@ -12,6 +12,7 @@ public class tvik4i2fel {
     static Statement s = null;
     static Scanner sc = new Scanner(System.in);
     static PreparedStatement ps = null;
+    static String user;
 	
 	public static void main(String[] args) {
 		Connect();
@@ -158,9 +159,23 @@ public class tvik4i2fel {
     	}
     }
     
-    /*public static void DinamikusAdattorles() {
+    public static void DinamikusAdattorles() {
     	System.out.println("Törlendő autó: ");
     	String rsz = sc.next();
-    }*/
+        //Az sql parancsban a ? helyére kerülnek a paraméterek
+        String sqlp = "delete from " + user + ".AUTO" + " where rsz=?";
+        if (conn != null) {
+        	try {
+        		ps = conn.prepareStatement(sqlp);
+        		ps.setString(1, rsz);
+        		ps.executeUpdate();
+        		ps.close();
+        		System.out.println(rsz + " rendszámú autó törölve\n");
+        	} catch(Exception ex) {
+        		System.err.println(ex.getMessage());
+        	}
+        }
+    }
+
 }
 
