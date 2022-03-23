@@ -3,7 +3,7 @@ DECLARE
     lastName VARCHAR(100);
 
 BEGIN
-    firstName := 'Bence';
+    firstName := 'Bence ';
     lastName := 'Csomor';
-    dbms_output.put_line(firstName + lastName);
+    DBMS_OUTPUT.PUT_LINE(concat(firstName, lastName));
 END;
