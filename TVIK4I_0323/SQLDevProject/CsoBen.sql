@@ -1,4 +1,4 @@
-DECLARE name CHAR(100);
+DECLARE name VARCHAR(100);
 
 BEGIN
     name := 'Csomor Bence';
