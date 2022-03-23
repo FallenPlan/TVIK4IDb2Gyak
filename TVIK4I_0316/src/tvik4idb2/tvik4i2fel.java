@@ -1,5 +1,6 @@
 package tvik4idb2;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -14,6 +15,7 @@ public class tvik4i2fel {
     static Scanner sc = new Scanner(System.in);
     static PreparedStatement ps = null;
 	private static ResultSet rs;
+	private static CallableStatement cs;
     
     static String url = "jdbc:oracle:thin:@193.6.5.58:1521:XE";
     static String user = "H22_tvik4i";
@@ -26,10 +28,14 @@ public class tvik4i2fel {
 		StatikusTablaLetrehozas();
 		StatikusTablaModositas();
 		StatikusAdatfelvitel();
-		//DinamikusAdatfelvitel();
+		//DinamikusAdatfelvetel();
 		//DinamikusAdattorles();
-		StatikusAdattorles();
-		StatikusLekerdezes();
+		//StatikusAdattorles(); 
+		//StatikusLekerdezes();
+		//ModosithatoKurzor();
+		//InEljarasHivas();
+		//OutEljarasHivas();
+		DinamikusTablaTorles();
 		
 	}
 
@@ -239,6 +245,136 @@ public class tvik4i2fel {
     		}
     	}
     }
-
+    
+    public static void ModosithatoKurzor() {
+		System.out.println("Szín: ");
+		String szin = sc.next().trim();
+		String sqlp = "select ar from auto where szin= '"+szin+"'";
+		if(conn != null) {
+			try {
+				s=conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+				rs=s.executeQuery(sqlp);
+				while(rs.next()) {
+					int regiar = rs.getInt("ar");
+					rs.updateInt("ar", (regiar*2));
+					rs.updateRow();
+				}
+			}catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}	
+	}
+	
+	public static void InEljarasHivas() {
+		if(conn != null) {
+			try {
+				String sqlp = "create or procedure arcsokkent " + "(kor IN number) is" + 
+			"begin "+ "update auto set ar=ar*0.9 where"
+						+"to_char (sysdate, 'yyyy' - evjarat > kor; "+ "end;";
+				System.out.println("Kor: ");
+				int kor  = sc.nextInt();
+				s = conn.createStatement();
+				s.executeUpdate(sqlp);
+				System.out.println("Függvény létrejött\n");
+				cs = conn.prepareCall("{call arcsokkent(?)}");
+				cs.setInt(1, kor);
+				cs.execute();
+			}catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}
+	}
+	
+	public static void OutEljarasHivas() {
+		if(conn != null) {
+			try {
+				String sqlp = "create or procedure atlagar " + "(sz IN char, atl OUT number) is " + 
+			"begin "+ "select avg(ar) into atl from auto where szin = sz; "
+						+"end;";
+				System.out.println("Szín: ");
+				String szin  = sc.next();
+				s = conn.createStatement();
+				s.executeUpdate(sqlp);
+				System.out.println("Eljárás létrejött\n");
+				cs = conn.prepareCall("{call atlagar(?, ?)}");
+				cs.setString(1, szin);
+				cs.registerOutParameter(2, java.sql.Types.FLOAT);
+				cs.execute();
+				float atlag = cs.getFloat(2);
+				System.out.println(szin  + "autók átlagára: "+atlag+"\n");
+			}catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}
+	}
+	
+	public static void FuggvenyHivas() {
+		if(conn != null) {
+			try {
+				String sqlp = "create or replace function atlagarfv " + "(sz IN char) return number is " + "atl number(10,2);"+
+								"begin "+ 
+						"select avg(ar) into atl from auto where szin = sz; "+"return atl;"
+						+"end;";
+				System.out.println("Szín: ");
+				String szin  = sc.next();
+				s = conn.createStatement();
+				s.executeUpdate(sqlp);
+				System.out.println("Függvény létrejött\n");
+				cs = conn.prepareCall("{? = call atlagarfv(?)}");
+				cs.setString(1, szin);
+				cs.registerOutParameter(1, java.sql.Types.FLOAT);
+				cs.setString(2, szin);
+				cs.execute();
+				float atlag = cs.getFloat(1);
+				System.out.println(szin  + "autók átlagára: "+atlag+"\n");
+			}catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}
+	}
+	
+	public static void DinamikusTablaTorles() {
+		
+		String sqlp = "create or replace procedure tablatorles(nev IN char) is " + "begin "+ "execute immediate 'drop table' || nev; "	+"end;";
+		
+		System.out.println("Törlendõ tábla: ");
+		String name   = sc.next().trim();
+		if(conn != null) {
+			try {
+				s = conn.createStatement();
+				s.executeUpdate(sqlp);
+				cs = conn.prepareCall("{call tablatorles(?)}");
+				cs.setString(1, name);
+				cs.execute();
+				System.out.println("Tábla törölve\n");
+			}catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}
+	}
+	
+	public static void DinamikusModositas() {
+		if(conn != null) {
+			String sqlp = "update auto1 set ar=ar-?";
+			System.out.println("Mennyivel csökkentsük az árat?");
+			int arcsokk = sc.nextInt();
+			try {
+				conn.setAutoCommit(false);
+				try {
+					ps = conn.prepareStatement(sqlp);
+					ps.setInt(1, arcsokk);
+					ps.executeUpdate();
+					conn.commit();
+					System.out.println("Módosítás megtörtént!\n");
+				}catch(Exception e) {
+					System.err.println(e.getMessage());
+					conn.rollback();
+					System.out.println("Módosítás visszavonva!\n");
+				}
+				conn.setAutoCommit(true);
+			}catch(Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}
+	}
 }
-
