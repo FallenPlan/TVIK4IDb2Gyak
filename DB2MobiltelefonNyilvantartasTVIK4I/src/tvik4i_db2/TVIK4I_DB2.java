@@ -1,6 +1,5 @@
 package tvik4i_db2;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,7 +14,6 @@ public class TVIK4I_DB2 {
     static Scanner sc = new Scanner(System.in);
     static PreparedStatement ps = null;
 	private static ResultSet rs;
-	private static CallableStatement cs;
     
     static String url = "jdbc:oracle:thin:@193.6.5.58:1521:XE";
     static String user = "H22_tvik4i";
@@ -23,8 +21,10 @@ public class TVIK4I_DB2 {
 	
 	public static void main(String[] args) {
 		Connect();
+		DriverReg();
+		
 		TablaTorlese();
-		//DriverReg();
+		
 		StatikusTablaLetrehozas();
 		StatikusTablaModositas();
 		StatikusAdatfelvitel();
@@ -202,41 +202,6 @@ public class TVIK4I_DB2 {
     	}
     }
     
-    public static void DinamikusAdatfelvitel() {
-    	if (conn != null) {
-    		//Az SQL parancsban a ? helyére kerülnek a paraméterek
-    		String sqlp = "insert into phone (rsz, tipus, szin, evjarat, ar, tulaj_id)" +
-    		"values (?, ?, ?, ?, ?, ?)";
-    		
-    		System.out.println("Kérem a rendszámot: ");
-    		String rsz = sc.next().trim();
-    		System.out.println("Kérem a típust: ");
-    		String tipus = sc.next().trim();
-    		System.out.println("Kérem a színt: ");
-    		String szin = sc.next().trim();
-    		System.out.println("Kérem a évjáratot: ");
-    		int evjarat = sc.nextInt();
-    		System.out.println("Kérem a árat: ");
-    		float ar = sc.nextFloat();
-    		System.out.println("Kérem a tulajdonos azonosítóját: ");
-    		int tulaj_id = sc.nextInt();
-    		try {
-    			ps = conn.prepareStatement(sqlp);
-    			ps.setString(1, rsz);
-    			ps.setString(2, tipus);
-    			ps.setString(3, szin);
-    			ps.setInt(4, evjarat);
-    			ps.setFloat(5, ar);
-    			ps.setInt(6, tulaj_id);
-    			ps.executeUpdate();
-    			ps.close();
-    			System.out.println("Autó felvéve\n");
-    		} catch(Exception ex) {
-    			System.err.println(ex.getMessage());
-    		}
-    	}
-    }
-    
     public static void DinamikusAdattorles() {
     	System.out.println("Costumer to delete: ");
     	String id = sc.next();
@@ -277,7 +242,7 @@ public class TVIK4I_DB2 {
     	if (conn != null) {
     		if(table.equals("phone")) {
         		String  sqlp = "select * from phone";
-        		System.out.println("ID Type Color Release Price Condition");
+        		System.out.println("ID"+  "\t\t" +" Type"+"\t\t"+" Color"+"\t\t"+" Release"+"\t\t"+" Price"+"\t\t"+" Condition");
         		try {
         			s = conn.createStatement();
         			s.executeQuery(sqlp);
@@ -288,10 +253,10 @@ public class TVIK4I_DB2 {
         				String type = rs.getString("type");
         				String color = rs.getString("color");
         				String release = rs.getString("release");
-        				int price = rs.getInt("price");
-        				int condition = rs.getInt("condition");
+        				Integer price = rs.getInt("price");
+        				String condition = rs.getString("condition");
         				System.out.println(id + "\t\t" + type +  "\t" + color + "\t" + 
-        				release + "\t" + price + "\t" + condition);
+        				release + "\t" + price + "\t\t" + condition);
         			}
         			rs.close();
         		} catch(Exception ex) {
@@ -299,7 +264,7 @@ public class TVIK4I_DB2 {
         		}
     		} else if(table.equals("costumer")) {
         		String  sqlp = "select * from costumer";
-        		System.out.println("IdentityN Name Address Salary Birthday");
+        		System.out.println("IdentityN"+  "\t\t" +" Name"+"\t\t\t\t"+" Address"+"\t\t\t"+" Salary"+"\t\t"+" Birthday");
         		try {
         			s = conn.createStatement();
         			s.executeQuery(sqlp);
@@ -320,7 +285,7 @@ public class TVIK4I_DB2 {
         		}
     		} else if(table.equals("webShop")) {
         		String  sqlp = "select * from webShop";
-        		System.out.println("ID Name Address URL Foundation");
+        		System.out.println("ID"+  "\t\t" +" Name"+"\t\t"+" Address"+"\t\t"+" URL"+"\t\t"+" Foundation");
         		try {
         			s = conn.createStatement();
         			s.executeQuery(sqlp);
@@ -362,34 +327,9 @@ public class TVIK4I_DB2 {
 			}catch(Exception ex) {
 				System.err.println(ex.getMessage());
 			}
-		}	
-	}
-
-	
-	/*public static void FuggvenyHivas() {
-		if(conn != null) {
-			try {
-				String sqlp = "create or replace function atlagarfv " + "(sz IN char) return number is " + "atl number(10,2);"+
-								"begin "+ 
-						"select avg(ar) into atl from auto where szin = sz; "+"return atl;"
-						+"end;";
-				System.out.println("Szín: ");
-				String szin  = sc.next();
-				s = conn.createStatement();
-				s.executeUpdate(sqlp);
-				System.out.println("Függvény létrejött\n");
-				cs = conn.prepareCall("{? = call atlagarfv(?)}");
-				cs.setString(1, szin);
-				cs.registerOutParameter(1, java.sql.Types.FLOAT);
-				cs.setString(2, szin);
-				cs.execute();
-				float atlag = cs.getFloat(1);
-				System.out.println(szin  + "autók átlagára: "+atlag+"\n");
-			}catch(Exception ex) {
-				System.err.println(ex.getMessage());
-			}
 		}
-	}*/
+		System.out.println("Phone price with "+color+" color was doubled");
+	}
 	
 	public static void DinamikusLekerdezes() {
 		System.out.println("WebShop ID-je: ");
@@ -409,32 +349,8 @@ public class TVIK4I_DB2 {
 			}catch(Exception ex) {
 				System.out.println(ex.getMessage());
 			}
-		}	
-	}
-	
-	/*public static void DinamikusModositas() {
-		if(conn != null) {
-			String sqlp = "update auto1 set ar=ar-?";
-			System.out.println("Mennyivel csökkentsük az árat?");
-			int arcsokk = sc.nextInt();
-			try {
-				conn.setAutoCommit(false);
-				try {
-					ps = conn.prepareStatement(sqlp);
-					ps.setInt(1, arcsokk);
-					ps.executeUpdate();
-					conn.commit();
-					System.out.println("Módosítás megtörtént!\n");
-				}catch(Exception e) {
-					System.err.println(e.getMessage());
-					conn.rollback();
-					System.out.println("Módosítás visszavonva!\n");
-				}
-				conn.setAutoCommit(true);
-			}catch(Exception ex) {
-				System.err.println(ex.getMessage());
-			}
 		}
-	}*/
+	}
+
 
 }
