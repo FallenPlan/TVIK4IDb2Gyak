@@ -1,0 +1,3 @@
+begin
+    incPrice;
+end;

@@ -1,0 +1,1 @@
+select csomag1.getName(12398746) from dual;

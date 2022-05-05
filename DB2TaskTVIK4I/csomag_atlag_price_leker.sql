@@ -1,0 +1,1 @@
+select csomag1.getAvgPrice('LG') from dual;
