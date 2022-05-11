@@ -1,4 +1,4 @@
-create table Naplo5(
+create table Vasarlo(
 VID char(3),
 NEV varchar2(30) not null,
 CIM varchar2(30),
